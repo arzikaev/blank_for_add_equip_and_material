@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+<div id="app">
+    <v-app>
+        <v-app-bar
+                app
+                color="primary"
+                dark
+        >
+            <h1>CITY-STROY</h1>
+        </v-app-bar>
+        <v-main>
+            <template>
+                <v-bottom-navigation
+                        :value="value"
+                        color="teal"
+                        grow
+                >
+                    <v-btn @click="selectTech">
+                        <span>Техника</span>
+                        <v-icon>mdi-excavator</v-icon>
+                    </v-btn>
+
+                    <v-btn @click="selectMaterials">
+                        <span>Материалы</span>
+                        <v-icon>mdi-view-compact</v-icon>
+                    </v-btn>
+
+                    <v-btn @click="selectWorks">
+                        <span>Работы</span>
+                        <v-icon>mdi-worker</v-icon>
+                    </v-btn>
+                </v-bottom-navigation>
+            </template>
+            <template v-if="type==='tech'">
+                <v-container>
+                    <v-row class="ma-1 pa-1">
+                        <v-col>
+                            <template>
+                                <v-row class="ma-1 pa-1">
+                                    <v-dialog
+                                            v-model="dialog"
+                                            fullscreen
+                                            hide-overlay
+                                            transition="dialog-bottom-transition"
+                                    >
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn
+                                                    color="orange"
+                                                    dark
+                                                    v-bind="attrs"
+                                                    v-on="on"
+                                            >
+                                                Добавить
+                                            </v-btn>
+                                        </template>
+                                        <v-card>
+                                            <v-toolbar
+                                                    dark
+                                                    color="primary"
+                                            >
+                                                <v-btn
+                                                        icon
+                                                        dark
+                                                        @click="dialog = false"
+                                                >
+                                                    <v-icon>mdi-close</v-icon>
+                                                </v-btn>
+                                                <v-toolbar-title>Форма добавления техники</v-toolbar-title>
+                                            </v-toolbar>
+                                            <v-card-text>
+                                                <v-menu
+                                                        ref="menu"
+                                                        v-model="menu"
+                                                        :close-on-content-click="false"
+                                                        transition="scale-transition"
+                                                        offset-y
+                                                        min-width="auto"
+                                                >
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <v-text-field
+                                                                v-model="dates"
+                                                                label="Дата работ"
+                                                                prepend-icon="mdi-calendar"
+                                                                readonly
+                                                                v-bind="attrs"
+                                                                v-on="on"
+                                                        ></v-text-field>
+                                                    </template>
+                                                    <v-date-picker
+                                                            v-model="dates"
+                                                            range
+                                                            locale="ru-RU"
+                                                    >
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn
+                                                                text
+                                                                color="primary"
+                                                                @click="menu = false"
+                                                        >
+                                                            Отмена
+                                                        </v-btn>
+                                                        <v-btn
+                                                                text
+                                                                color="primary"
+                                                                @click="$refs.menu.save(dates)"
+                                                        >
+                                                            Сохранить
+                                                        </v-btn>
+                                                    </v-date-picker>
+                                                </v-menu>
+                                                <v-row class="ma-2 pa-2">
+                                                    <v-autocomplete
+                                                            v-model="contragentID"
+                                                            :items="companys"
+                                                            item-text="TITLE"
+                                                            item-value="ID"
+                                                            label="Выберите организацию"
+                                                    ></v-autocomplete>
+                                                </v-row>
+                                                <v-row class="ma-2 pa-2">
+                                                    <v-autocomplete
+                                                            v-model="objID"
+                                                            :items="objs"
+                                                            item-text="NAME"
+                                                            item-value="ID"
+                                                            label="Выберите объект"
+                                                    >
+                                                    </v-autocomplete>
+                                                </v-row>
+                                                <v-autocomplete
+                                                        class="ma-2 pa-2"
+                                                        v-model="techID"
+                                                        label="Наименование техники"
+                                                        :items="tecnics"
+                                                        item-text="NAME"
+                                                        item-value="ID"
+                                                        required
+                                                ></v-autocomplete>
+                                                <v-select
+                                                        class="ma-2 pa-2"
+                                                        v-model="typeWork"
+                                                        :items="typeWorks"
+                                                        label="Вид работ"
+                                                        required
+                                                ></v-select>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="time"
+                                                        label="Часы работы"
+                                                        required
+                                                ></v-text-field>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="hoursPlan"
+                                                        type="number"
+                                                        label="Количество(ПЛАН)"
+                                                        disabled
+                                                        required
+                                                ></v-text-field>
+                                                <v-select
+                                                        class="ma-2 pa-2"
+                                                        label="Единица измерения"
+                                                        v-model="unitID"
+                                                        :items="units"
+                                                        item-text="NAME"
+                                                        item-value="ID"
+                                                ></v-select>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="hours"
+                                                        type="number"
+                                                        label="Количество"
+                                                        required
+                                                ></v-text-field>
+                                                <v-textarea
+                                                        class="ma-2 pa-2"
+                                                        counter
+                                                        label="Вид работ подробнее"
+                                                        v-model="comments"
+                                                        required
+                                                ></v-textarea>
+                                            </v-card-text>
+                                            <v-toolbar
+                                                    dark
+                                                    color="primary"
+                                            >
+                                                <v-toolbar-items>
+                                                    <v-btn
+                                                            dark
+                                                            text
+                                                            @click="saveRow"
+                                                    >
+                                                        Сохранить
+                                                    </v-btn>
+                                                </v-toolbar-items>
+                                            </v-toolbar>
+                                        </v-card>
+                                    </v-dialog>
+                                </v-row>
+                            </template>
+                        </v-col>
+                    </v-row>
+                    <v-row class="ma-2 pa-2" v-if="itemsData.length > 0">
+                        <v-col>
+                            <template>
+                                <v-simple-table>
+                                    <template v-slot:default>
+                                        <thead>
+                                        <tr class="gray">
+                                            <th class="text-center">
+                                            </th>
+                                            <th class="text-center">
+                                                Наименование организации
+                                            </th>
+                                            <th class="text-center">
+                                                Объект
+                                            </th>
+                                            <th class="text-center">
+                                                Наименование техники
+                                            </th>
+                                            <th class="text-center">
+                                                Дата работы с
+                                            </th>
+                                            <th class="text-center">
+                                                Дата работы по
+                                            </th>
+                                            <th class="text-center">
+                                                Часы работы
+                                            </th>
+                                            <th class="text-center">
+                                                Единица измерения
+                                            </th>
+                                            <th class="text-center">
+                                                Количество(План)
+                                            </th>
+                                            <th class="text-center">
+                                                Вид работ
+                                            </th>
+                                            <th class="text-center">
+                                                Количество
+                                            </th>
+                                            <th class="text-center">
+                                                Вид работ подробнее
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <template v-if="loading === true">
+                                            <v-progress-linear
+                                                    :active="loading"
+                                                    :indeterminate="loading"
+                                                    absolute
+                                                    top
+                                                    color="light-green darken-4"
+                                                    height="10"
+                                            ></v-progress-linear>
+                                        </template>
+                                        <tbody>
+                                        <template
+                                                v-for="item in itemsData"
+                                        >
+                                            <tr :key="item.id" class="gray">
+                                                <td>
+                                                    <v-btn
+                                                            icon
+                                                            @click="deleteRow(item.id)"
+                                                    >
+                                                        <v-icon>
+                                                            mdi-trash-can-outline
+                                                        </v-icon>
+                                                    </v-btn>
+                                                </td>
+                                                <td>{{ item.contragent }}</td>
+                                                <td>{{ item.obj }}</td>
+                                                <td>{{ item.technics }}</td>
+                                                <td>{{ item.dateFrom }}</td>
+                                                <td>{{ item.dateTo }}</td>
+                                                <td>{{ item.time }}</td>
+                                                <td>{{ item.unit }}</td>
+                                                <td>{{ item.hoursPlan }}</td>
+                                                <td>{{ item.typeWork }}</td>
+                                                <td>{{ item.hours }}</td>
+                                                <td>{{ item.comments }}</td>
+                                            </tr>
+                                        </template>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
+                            </template>
+                        </v-col>
+                    </v-row>
+                    <v-row class="ma-1 pa-1" v-if="itemsData.length > 0">
+                        <v-col>
+                            <v-btn color="success" @click="saveTechnics">
+                                Занести в отчет
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </template>
+            <template v-if="type==='materials'">
+                <v-container>
+                    <v-row class="ma-1 pa-1">
+                        <v-col>
+                            <template>
+                                <v-row class="ma-1 pa-1">
+                                    <v-dialog
+                                            v-model="dialog"
+                                            fullscreen
+                                            hide-overlay
+                                            transition="dialog-bottom-transition"
+                                    >
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn
+                                                    color="orange"
+                                                    dark
+                                                    v-bind="attrs"
+                                                    v-on="on"
+                                            >
+                                                Добавить
+                                            </v-btn>
+                                        </template>
+                                        <v-card>
+                                            <v-toolbar
+                                                    dark
+                                                    color="primary"
+                                            >
+                                                <v-btn
+                                                        icon
+                                                        dark
+                                                        @click="dialog = false"
+                                                >
+                                                    <v-icon>mdi-close</v-icon>
+                                                </v-btn>
+                                                <v-toolbar-title>Форма добавления материалов</v-toolbar-title>
+                                            </v-toolbar>
+                                            <v-card-text>
+                                                <v-menu
+                                                        ref="menu"
+                                                        v-model="menu"
+                                                        :close-on-content-click="false"
+                                                        transition="scale-transition"
+                                                        offset-y
+                                                        min-width="auto"
+                                                >
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <v-text-field
+                                                                v-model="dates"
+                                                                label="Дата работ"
+                                                                prepend-icon="mdi-calendar"
+                                                                readonly
+                                                                v-bind="attrs"
+                                                                v-on="on"
+                                                        ></v-text-field>
+                                                    </template>
+                                                    <v-date-picker
+                                                            v-model="dates"
+                                                            range
+                                                    >
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn
+                                                                text
+                                                                color="primary"
+                                                                @click="menu = false"
+                                                        >
+                                                            Отмена
+                                                        </v-btn>
+                                                        <v-btn
+                                                                text
+                                                                color="primary"
+                                                                @click="$refs.menu.save(dates)"
+                                                        >
+                                                            Сохранить
+                                                        </v-btn>
+                                                    </v-date-picker>
+                                                </v-menu>
+                                                <v-row class="ma-2 pa-2">
+                                                    <v-autocomplete
+                                                            v-model="contragentID"
+                                                            :items="companys"
+                                                            item-text="TITLE"
+                                                            item-value="ID"
+                                                            label="Выберите организацию"
+                                                    ></v-autocomplete>
+                                                </v-row>
+                                                <v-row class="ma-2 pa-2">
+                                                    <v-autocomplete
+                                                            v-model="objID"
+                                                            :items="objs"
+                                                            item-text="NAME"
+                                                            item-value="ID"
+                                                            label="Выберите объект"
+                                                    >
+                                                    </v-autocomplete>
+                                                </v-row>
+                                                <v-autocomplete
+                                                        class="ma-2 pa-2"
+                                                        v-model="techID"
+                                                        label="Наименование материала"
+                                                        :items="materials"
+                                                        item-text="NAME"
+                                                        item-value="ID"
+                                                        required
+                                                ></v-autocomplete>
+                                                <v-select
+                                                        class="ma-2 pa-2"
+                                                        v-model="typeWork"
+                                                        :items="typeWorks"
+                                                        label="Вид работ"
+                                                        required
+                                                ></v-select>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="hoursPlan"
+                                                        type="number"
+                                                        label="Затрачено(ПЛАН)"
+                                                        disabled
+                                                        required
+                                                ></v-text-field>
+                                                <v-select
+                                                        class="ma-2 pa-2"
+                                                        label="Единица измерения"
+                                                        v-model="unitID"
+                                                        :items="units"
+                                                        required
+                                                        item-text="NAME"
+                                                        item-value="ID"
+                                                ></v-select>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="hours"
+                                                        type="number"
+                                                        label="Поступило"
+                                                        required
+                                                ></v-text-field>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="sprent"
+                                                        type="number"
+                                                        label="Затрачено"
+                                                        required
+                                                ></v-text-field>
+                                                <v-textarea
+                                                        class="ma-2 pa-2"
+                                                        counter
+                                                        label="Вид работ(куда использовали)"
+                                                        v-model="comments"
+                                                        required
+                                                ></v-textarea>
+                                            </v-card-text>
+                                            <v-toolbar
+                                                    dark
+                                                    color="primary"
+                                            >
+                                                <v-toolbar-items>
+                                                    <v-btn
+                                                            dark
+                                                            text
+                                                            @click="saveRow"
+                                                    >
+                                                        Сохранить
+                                                    </v-btn>
+                                                </v-toolbar-items>
+                                            </v-toolbar>
+                                        </v-card>
+                                    </v-dialog>
+                                </v-row>
+                            </template>
+                        </v-col>
+                    </v-row>
+                    <v-row class="ma-2 pa-2" v-if="itemsData.length > 0">
+                        <v-col>
+                            <template>
+                                <v-simple-table>
+                                    <template v-slot:default>
+                                        <thead>
+                                        <tr class="gray">
+                                            <th class="text-center">
+                                            </th>
+                                            <th class="text-center">
+                                                Наименование организации
+                                            </th>
+                                            <th class="text-center">
+                                                Объект
+                                            </th>
+                                            <th class="text-center">
+                                                Наименование материала
+                                            </th>
+                                            <th class="text-center">
+                                                Дата c
+                                            </th>
+                                            <th class="text-center">
+                                                Дата по
+                                            </th>
+                                            <th class="text-center">
+                                                Единица измерения
+                                            </th>
+                                            <th class="text-center">
+                                                Затрачено, кол-во(ПЛАН)
+                                            </th>
+                                            <th class="text-center">
+                                                Поступило, кол-во
+                                            </th>
+                                            <th class="text-center">
+                                                Затрачено, кол-во
+                                            </th>
+                                            <th class="text-center">
+                                                Вид работ
+                                            </th>
+                                            <th class="text-center">
+                                                Вид работ(куда использовали)
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <template v-if="loading === true">
+                                            <v-progress-linear
+                                                    :active="loading"
+                                                    :indeterminate="loading"
+                                                    absolute
+                                                    top
+                                                    color="light-green darken-4"
+                                                    height="10"
+                                            ></v-progress-linear>
+                                        </template>
+                                        <tbody>
+                                        <template
+                                                v-for="item in itemsData"
+                                        >
+                                            <tr :key="item.id" class="gray">
+                                                <td>
+                                                    <v-btn
+                                                            icon
+                                                            @click="deleteRow(item.id)"
+                                                    >
+                                                        <v-icon>
+                                                            mdi-trash-can-outline
+                                                        </v-icon>
+                                                    </v-btn>
+                                                </td>
+                                                <td>{{ item.contragent }}</td>
+                                                <td>{{ item.obj }}</td>
+                                                <td>{{ item.technics }}</td>
+                                                <td>{{ item.dateFrom }}</td>
+                                                <td>{{ item.dateTo }}</td>
+                                                <td>{{ item.unit }}</td>
+                                                <td>{{ item.hoursPlan }}</td>
+                                                <td>{{ item.hours }}</td>
+                                                <td>{{ item.sprent }}</td>
+                                                <td>{{ item.typeWork }}</td>
+                                                <td>{{ item.comments }}</td>
+                                            </tr>
+                                        </template>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
+                            </template>
+                        </v-col>
+                    </v-row>
+                    <v-row class="ma-1 pa-1" v-if="itemsData.length > 0">
+                        <v-col>
+                            <v-btn color="success" @click="saveMaterials">
+                                Занести в отчет
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </template>
+            <template v-if="type==='works'">
+                <v-container>
+                    <v-row class="ma-1 pa-1">
+                        <v-col>
+                            <template>
+                                <v-row class="ma-1 pa-1">
+                                    <v-dialog
+                                            v-model="dialog"
+                                            fullscreen
+                                            hide-overlay
+                                            transition="dialog-bottom-transition"
+                                    >
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn
+                                                    color="orange"
+                                                    dark
+                                                    v-bind="attrs"
+                                                    v-on="on"
+                                            >
+                                                Добавить
+                                            </v-btn>
+                                        </template>
+                                        <v-card>
+                                            <v-toolbar
+                                                    dark
+                                                    color="primary"
+                                            >
+                                                <v-btn
+                                                        icon
+                                                        dark
+                                                        @click="dialog = false"
+                                                >
+                                                    <v-icon>mdi-close</v-icon>
+                                                </v-btn>
+                                                <v-toolbar-title>Форма добавления видов работ</v-toolbar-title>
+                                            </v-toolbar>
+                                            <v-card-text>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="techID"
+                                                        label="Вид работ"
+                                                        required
+                                                ></v-text-field>
+                                                <v-menu
+                                                        ref="menu"
+                                                        v-model="menu"
+                                                        :close-on-content-click="false"
+                                                        transition="scale-transition"
+                                                        offset-y
+                                                        min-width="auto"
+                                                >
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <v-text-field
+                                                                v-model="dates"
+                                                                label="Дата работ"
+                                                                prepend-icon="mdi-calendar"
+                                                                readonly
+                                                                v-bind="attrs"
+                                                                v-on="on"
+                                                        ></v-text-field>
+                                                    </template>
+                                                    <v-date-picker
+                                                            v-model="dates"
+                                                    >
+                                                        <v-spacer></v-spacer>
+                                                        <v-btn
+                                                                text
+                                                                color="primary"
+                                                                @click="menu = false"
+                                                        >
+                                                            Отмена
+                                                        </v-btn>
+                                                        <v-btn
+                                                                text
+                                                                color="primary"
+                                                                @click="$refs.menu.save(dates)"
+                                                        >
+                                                            Сохранить
+                                                        </v-btn>
+                                                    </v-date-picker>
+                                                </v-menu>
+                                                <v-row class="ma-2 pa-2">
+                                                    <v-autocomplete
+                                                            v-model="objID"
+                                                            :items="objs"
+                                                            item-text="NAME"
+                                                            item-value="ID"
+                                                            label="Выберите объект"
+                                                    >
+                                                    </v-autocomplete>
+                                                </v-row>
+                                                <v-text-field
+                                                        class="ma-2 pa-2"
+                                                        v-model="hours"
+                                                        type="number"
+                                                        label="Объем работ"
+                                                        required
+                                                ></v-text-field>
+                                                <v-select
+                                                        class="ma-2 pa-2"
+                                                        v-model="unitID"
+                                                        :items="units"
+                                                        label="Единица измерения"
+                                                        required
+                                                ></v-select>
+                                                <v-textarea
+                                                        class="ma-2 pa-2"
+                                                        counter
+                                                        label="Используемый материал (что списать)"
+                                                        v-model="comments"
+                                                        required
+                                                ></v-textarea>
+                                            </v-card-text>
+                                            <v-toolbar
+                                                    dark
+                                                    color="primary"
+                                            >
+                                                <v-toolbar-items>
+                                                    <v-btn
+                                                            dark
+                                                            text
+                                                            @click="saveRow"
+                                                    >
+                                                        Сохранить
+                                                    </v-btn>
+                                                </v-toolbar-items>
+                                            </v-toolbar>
+                                        </v-card>
+                                    </v-dialog>
+                                </v-row>
+                            </template>
+                        </v-col>
+                    </v-row>
+                    <v-row class="ma-2 pa-2" v-if="itemsData.length > 0">
+                        <v-col>
+                            <template>
+                                <v-simple-table>
+                                    <template v-slot:default>
+                                        <thead>
+                                        <tr class="gray">
+                                            <th class="text-center">
+                                            </th>
+                                            <th class="text-center">
+                                                Объект
+                                            </th>
+                                            <th class="text-center">
+                                                Вид работ
+                                            </th>
+                                            <th class="text-center">
+                                                Дата c
+                                            </th>
+                                            <th class="text-center">
+                                                Дата по
+                                            </th>
+                                            <th class="text-center">
+                                                Объем работ
+                                            </th>
+                                            <th class="text-center">
+                                                Единица измерения
+                                            </th>
+                                            <th class="text-center">
+                                                Используемый материал (что списать)
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <template v-if="loading === true">
+                                            <v-progress-linear
+                                                    :active="loading"
+                                                    :indeterminate="loading"
+                                                    absolute
+                                                    top
+                                                    color="light-green darken-4"
+                                                    height="10"
+                                            ></v-progress-linear>
+                                        </template>
+                                        <tbody>
+                                        <template
+                                                v-for="item in itemsData"
+                                        >
+                                            <tr :key="item.id" class="gray">
+                                                <td>
+                                                    <v-btn
+                                                            icon
+                                                            @click="deleteRow(item.id)"
+                                                    >
+                                                        <v-icon>
+                                                            mdi-trash-can-outline
+                                                        </v-icon>
+                                                    </v-btn>
+                                                </td>
+                                                <td>{{ item.obj }}</td>
+                                                <td>{{ item.technics }}</td>
+                                                <td>{{ item.dateFrom }}</td>
+                                                <td>{{ item.dateTo }}</td>
+                                                <td>{{ item.hours }}</td>
+                                                <td>{{ item.unit }}</td>
+                                                <td>{{ item.comments }}</td>
+                                            </tr>
+                                        </template>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
+                            </template>
+                        </v-col>
+                    </v-row>
+                    <v-row class="ma-1 pa-1" v-if="itemsData.length > 0">
+                        <v-col>
+                            <v-btn color="success" @click="saveWorks">
+                                Занести в отчет
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </template>
+        </v-main>
+    </v-app>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="//api.bitrix24.com/api/v1/"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.js"></script>
+<script src="exceljs/dist/exceljs.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"
+        integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+<script>
+    new Vue({
+        el: '#app',
+        vuetify: new Vuetify(),
+        data: () => ({
+            value: 1,
+            loader: false,
+            loading: false,
+            dialog: false,
+            menu: false,
+            type: 'tech',
+            user: '',
+            dates: [],
+            normalDate: [],
+            itemsData: [],
+            typeWorks: [],
+            typeWork: '',
+            techID: '',
+            materials: [],
+            units: [
+                {ID: '1509', NAME: 'м3'},
+                {ID: '1511', NAME: 'м2'},
+                {ID: '1513', NAME: 'шт'},
+                {ID: '1515', NAME: 'мп'},
+                {ID: '1517', NAME: 'сутки'},
+                {ID: '1519', NAME: 'маш/час'},
+                {ID: '1521', NAME: 'смена'},
+            ],
+            contragent: '',
+            obj: '',
+            contragentID: '',
+            objID: '',
+            companys: [],
+            objs: [],
+            tecnics: [],
+            time: '',
+            unitID: '',
+            hours: '',
+            hoursPlan: '',
+            planID: '',
+            sprent: '',
+            comments: '',
+            url: 'https://citystroi.bitrix24.ru/rest/73/gjdt5g3y10jxw3r9/'
+        }),
+        methods: {
+            deleteRow(id) {
+                const indexItem = this.itemsData.map(e => e.id).indexOf(id);
+                console.log({indexItem})
+                this.itemsData.splice(indexItem, 1)
+            },
+            async normalizeDate() {
+                try {
+                    this.normalDate = [];
+                    const firstDate = this.dates[0].split('-')
+                    const twoDate = this.dates[1].split('-')
+                    const firstDateFormated = firstDate[2] + '.' + firstDate[1] + '.' + firstDate[0] + ' 00:00:00'
+                    const twoDateFormated = twoDate[2] + '.' + twoDate[1] + '.' + twoDate[0] + ' 23:59:59'
+                    this.normalDate.push(firstDateFormated)
+                    this.normalDate.push(twoDateFormated)
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async saveTechnics() {
+                try {
+                    this.loading = true
+                    const units = [
+                        {ID: '1523', NAME: 'м3'},
+                        {ID: '1525', NAME: 'м2'},
+                        {ID: '1527', NAME: 'шт'},
+                        {ID: '1529', NAME: 'мп'},
+                        {ID: '1531', NAME: 'сутки'},
+                        {ID: '1533', NAME: 'маш/час'},
+                        {ID: '1535', NAME: 'смена'},
+                    ]
+                    console.log(this.itemsData)
+                    for (const item of this.itemsData) {
+                        const params = {
+                            'IBLOCK_TYPE_ID': 'lists',
+                            'IBLOCK_ID': '101',
+                            'ELEMENT_CODE': `item${item.technics}&${item.date}&${item.contragentID}&${item.objID}&${new Date()}`,
+                            'FIELDS': {
+                                'NAME': 'Отчет по технике',
+                                'PROPERTY_1057': item.dateFrom,
+                                'PROPERTY_1369': item.dateTo,
+                                'PROPERTY_1067': item.contragentID,
+                                'PROPERTY_1061': item.time,
+                                'PROPERTY_1063': item.hours,
+                                'PREVIEW_TEXT': item.comments,
+                                'PROPERTY_1065': this.user,
+                                'PROPERTY_1069': item.objID,
+                                'PROPERTY_1073': item.techID,
+                                'PROPERTY_1359': item.typeWork,
+                                'PROPERTY_1365': units.filter((e) => e.NAME == item.unit)[0].ID
+                            }
+                        }
+                        const method = 'lists.element.add'
+                        const rowAdd = await axios.post(this.url + method, params)
+                        //отнимаем из плана
+                        const paramsUpdatePlan = {
+                            'IBLOCK_TYPE_ID': 'lists',
+                            'IBLOCK_ID': '145',
+                            'ELEMENT_ID': item.planID.ID,
+                            'FIELDS': {
+                                'NAME': item.planID.NAME,
+                                'PROPERTY_1347': Object.values(item.planID.PROPERTY_1347)[0], //объект
+                                'PROPERTY_1361': Object.values(item.planID.PROPERTY_1361)[0], //вид работы
+                                'PROPERTY_1339': !!item.planID.PROPERTY_1339 ? Object.values(item.planID.PROPERTY_1339)[0]: '', //техника
+                                'PROPERTY_1341': !!item.planID.PROPERTY_1341 ? Object.values(item.planID.PROPERTY_1341)[0]: '', //материал
+                                'PROPERTY_1343': Object.values(item.planID.PROPERTY_1343)[0], // единица измерения
+                                'PROPERTY_1345': Number(Object.values(item.planID.PROPERTY_1345)[0]) - Number(item.hours), // кол-во
+                                'PROPERTY_1363': Object.values(item.planID.PROPERTY_1363)[0], // план
+                            }
+                        }
+                        await axios.post(this.url + 'lists.element.update', paramsUpdatePlan)
+                    }
+                    this.itemsData = []
+                    this.loading = false
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async saveMaterials() {
+                try {
+                    const units = [
+                        {ID: '1537', NAME: 'м3'},
+                        {ID: '1539', NAME: 'м2'},
+                        {ID: '1541', NAME: 'шт'},
+                        {ID: '1543', NAME: 'мп'},
+                        {ID: '1545', NAME: 'сутки'},
+                        {ID: '1547', NAME: 'маш/час'},
+                        {ID: '1549', NAME: 'смена'},
+                    ]
+                    this.loading = true
+                    console.log(this.itemsData)
+                    for (const item of this.itemsData) {
+                        const params = {
+                            'IBLOCK_TYPE_ID': 'lists',
+                            'IBLOCK_ID': '105',
+                            'ELEMENT_CODE': `item${item.techID}&${item.date}`,
+                            'FIELDS': {
+                                'NAME': 'Отчет по материалам',
+                                'PROPERTY_1075': item.dateFrom,
+                                'PROPERTY_1371': item.dateTo,
+                                'PROPERTY_1079': item.contragentID,
+                                'PROPERTY_1085': item.hours,
+                                'PROPERTY_1133': item.sprent,
+                                'PREVIEW_TEXT': item.comments,
+                                'PROPERTY_1087': this.user,
+                                'PROPERTY_1081': item.objID,
+                                'PROPERTY_1077': item.techID,
+                                'PROPERTY_1367': units.filter((e) => e.NAME == item.unit)[0].ID
+                            }
+                        }
+                        console.log({params})
+                        const method = 'lists.element.add'
+                        const rowAdd = await axios.post(this.url + method, params)
+                        console.log({rowAdd})
+                        //отнимаем из плана
+                        const paramsUpdatePlan = {
+                            'IBLOCK_TYPE_ID': 'lists',
+                            'IBLOCK_ID': '145',
+                            'ELEMENT_ID': item.planID.ID,
+                            'FIELDS': {
+                                'NAME': item.planID.NAME,
+                                'PROPERTY_1347': Object.values(item.planID.PROPERTY_1347)[0], //объект
+                                'PROPERTY_1361': Object.values(item.planID.PROPERTY_1361)[0], //вид работы
+                                'PROPERTY_1339': !!item.planID.PROPERTY_1339 ? Object.values(item.planID.PROPERTY_1339)[0]: '', //техника
+                                'PROPERTY_1341': !!item.planID.PROPERTY_1341 ? Object.values(item.planID.PROPERTY_1341)[0]: '', //материал
+                                'PROPERTY_1343': Object.values(item.planID.PROPERTY_1343)[0], // единица измерения
+                                'PROPERTY_1345': Number(Object.values(item.planID.PROPERTY_1345)[0]) - Number(item.sprent), // кол-во
+                                'PROPERTY_1363': Object.values(item.planID.PROPERTY_1363)[0], // план
+                            }
+                        }
+                        await axios.post(this.url + 'lists.element.update', paramsUpdatePlan)
+                    }
+                    this.itemsData = []
+                    this.loading = false
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async saveWorks() {
+                try {
+                    this.loading = true
+                    console.log(this.itemsData)
+                    for (const item of this.itemsData) {
+                        const params = {
+                            'IBLOCK_TYPE_ID': 'lists',
+                            'IBLOCK_ID': '109',
+                            'ELEMENT_CODE': `item${item.techID}&${item.date}`,
+                            'FIELDS': {
+                                'NAME': 'Отчет по видам работ',
+                                'PROPERTY_1089': item.dateFrom,
+                                'PROPERTY_1103': item.unitID,
+                                'PROPERTY_1097': item.hours,
+                                'PREVIEW_TEXT': item.comments,
+                                'PROPERTY_1099': this.user,
+                                'PROPERTY_1095': item.objID,
+                                'PROPERTY_1101': item.techID,
+                            }
+                        }
+                        const method = 'lists.element.add'
+                        const rowAdd = await axios.post(this.url + method, params)
+                        console.log({rowAdd})
+                    }
+                    this.itemsData = []
+                    this.loading = false
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            saveRow() {
+                if (!!this.dates) {
+                    console.log(this.selectedItem, 'company')
+                    this.normalizeDate()
+
+                    const obj = this.objs.filter((e) => {
+                        return e['ID'] == this.objID
+                    })
+                    console.log({obj})
+                    const contragent = this.companys.filter((e) => {
+                        return e['ID'] == this.contragentID
+                    })
+                    console.log({contragent})
+                    let technicTITLE = ''
+                    if (this.type == 'tech') technicTITLE = this.tecnics.filter((e) => {
+                        return e['ID'] == this.techID
+                    })
+                    else if (this.type == 'materials') technicTITLE = this.materials.filter((e) => {
+                        return e['ID'] == this.techID
+                    })
+                    else {
+                        technicTITLE = [{NAME: this.techID}]
+                    }
+                    const row = {
+                        id: this.itemsData.length + 1,
+                        contragent: '',
+                        technics: '',
+                        techID: this.techID,
+                        dateFrom: this.normalDate[0],
+                        dateTo: this.normalDate[1],
+                        time: this.time,
+                        unitID: this.unitID,
+                        unit: this.units.filter((e) => e.ID == this.unitID)[0].NAME,
+                        hours: this.hours,
+                        hoursPlan: this.hoursPlan,
+                        planID: this.planID,
+                        sprent: this.sprent,
+                        typeWork: this.typeWork,
+                        comments: this.comments,
+                        contragentID: `CO_${this.contragentID}`,
+                        obj: '',
+                        objID: this.objID
+                    }
+                    console.log({row})
+                    if (contragent.length > 0) row.contragent = contragent[0]['TITLE']
+                    if (technicTITLE.length > 0) row.technics = technicTITLE[0]['NAME']
+                    if (obj.length > 0) row.obj = obj[0]['NAME']
+
+                    console.log(row, 'row2')
+                    this.itemsData.push(row)
+                    this.dialog = false
+                    this.comments = ''
+                    this.hours = ''
+                    this.hoursPlan = ''
+                    this.planID = ''
+                    this.dates = []
+                    this.normalDate = []
+                    this.techID = ''
+                    this.typeWork = ''
+                    this.contragent = ''
+                    this.contragentID = ''
+                    this.company = ''
+                    this.time = ''
+                    this.unitID = ''
+                    this.obj = ''
+                    this.objID = ''
+                } else {
+                    alert('Вы не заполнили дату!')
+                }
+            },
+            async getUsers() {
+                try {
+                    BX24.init(
+                        async () => {
+                            const callBXMethod = (method, params) => new Promise((resolve, reject) => {
+                                BX24.callMethod(
+                                    method,
+                                    params,
+                                    function (result) {
+                                        if (result.error()) {
+                                            reject(result.error())
+                                        } else {
+                                            resolve(result.data())
+                                        }
+                                    }
+                                )
+                            })
+
+                            const user = await callBXMethod('profile', {})
+                            console.log(user.ID)
+                            this.user = user.ID
+                        })
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async getCompany() {
+                try {
+                    let start = 0
+                    let i = 0
+                    while (i === 0) {
+                        const companys = await axios.post(this.url + 'crm.company.list', {
+                            filter: {},
+                            select: ["ID", "TITLE"],
+                            start: start
+                        },)
+                        for (const company of companys.data.result) {
+                            this.companys.push(company)
+                        }
+                        if (companys.data.next) {
+                            start = companys.data.next
+                        } else {
+                            i = 1
+                        }
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async getObj() {
+                try {
+                    this.objs = []
+                    const params = {
+                        IBLOCK_TYPE_ID: 'lists',
+                        IBLOCK_ID: '97',
+                    }
+                    const method = 'lists.element.get'
+                    let i = 1
+                    let next = 0
+                    while (i > 0) {
+                        params.start = next
+                        const objData = await axios.post(this.url + method, params)
+                        next = objData.data.next
+                        for (const elem of objData.data.result) {
+                            this.objs.push(elem)
+                        }
+                        if (!next) {
+                            i = 0
+                        }
+                    }
+                    //console.log(this.obj)
+                    this.objs.sort((a, b) => {
+                        if (a['NAME'] < b['NAME']) {
+                            return -1;
+                        }
+                        if (a['NAME'] > b['NAME']) {
+                            return 1;
+                        }
+                        // a должно быть равным b
+                        return 0;
+                    })
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async getPlan() {
+                try {
+                    this.unitID = '';
+                    this.hoursPlan = '';
+                    this.planID = {};
+
+                    const params = {
+                        IBLOCK_TYPE_ID: 'lists',
+                        IBLOCK_ID: '145',
+                        FILTER: {
+                            PROPERTY_1347: this.objID,
+                            PROPERTY_1361: this.typeWork,
+                        }
+                    }
+
+                    if (this.type === 'tech') params.FILTER.PROPERTY_1339 = this.techID;
+                    else params.FILTER.PROPERTY_1341 = this.techID;
+
+                    const method = 'lists.element.get'
+
+                    const plan = await axios.post(this.url + method, params);
+                    this.unitID = Object.values(plan.data.result[0].PROPERTY_1343)[0];
+                    this.hoursPlan = Object.values(plan.data.result[0].PROPERTY_1345)[0];
+                    this.planID = plan.data.result[0]
+                    console.log({plan})
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async getTechnics() {
+                try {
+                    console.log('tech')
+                    this.tecnics = []
+                    const params = {
+                        IBLOCK_TYPE_ID: 'lists',
+                        IBLOCK_ID: '103',
+                    }
+                    const method = 'lists.element.get'
+                    let i = 1
+                    let next = 0
+                    while (i > 0) {
+                        params.start = next
+                        const tecnicsData = await axios.post(this.url + method, params)
+                        next = tecnicsData.data.next
+                        for (const elem of tecnicsData.data.result) {
+                            this.tecnics.push(elem)
+                        }
+                        if (!next) {
+                            i = 0
+                        }
+                    }
+                    console.log(this.tecnics)
+                    this.tecnics.sort((a, b) => {
+                        if (a['NAME'] < b['NAME']) {
+                            return -1;
+                        }
+                        if (a['NAME'] > b['NAME']) {
+                            return 1;
+                        }
+                        // a должно быть равным b
+                        return 0;
+                    })
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            async getMaterials() {
+                try {
+                    console.log('materials')
+                    this.tecnics = []
+                    const params = {
+                        IBLOCK_TYPE_ID: 'lists',
+                        IBLOCK_ID: '107',
+                    }
+                    const method = 'lists.element.get'
+                    let i = 1
+                    let next = 0
+                    while (i > 0) {
+                        params.start = next
+                        const materialData = await axios.post(this.url + method, params)
+                        next = materialData.data.next
+                        for (const elem of materialData.data.result) {
+                            this.materials.push(elem)
+                        }
+                        if (!next) {
+                            i = 0
+                        }
+                    }
+                    console.log(this.materials)
+                    this.materials.sort((a, b) => {
+                        if (a['NAME'] < b['NAME']) {
+                            return -1;
+                        }
+                        if (a['NAME'] > b['NAME']) {
+                            return 1;
+                        }
+                        // a должно быть равным b
+                        return 0;
+                    })
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            selectTech() {
+                this.type = 'tech'
+                this.comments = ''
+                this.hours = ''
+                this.hoursPlan = ''
+                this.dates = ''
+                this.normalDate = ''
+                this.techID = ''
+                this.contragent = ''
+                this.contragentID = ''
+                this.company = ''
+                this.time = ''
+                this.unitID = ''
+                this.obj = ''
+                this.objID = ''
+                this.itemsData = []
+            },
+            selectMaterials() {
+                this.type = 'materials'
+                this.comments = ''
+                this.hours = ''
+                this.hoursPlan = ''
+                this.dates = ''
+                this.normalDate = ''
+                this.techID = ''
+                this.contragent = ''
+                this.contragentID = ''
+                this.company = ''
+                this.time = ''
+                this.unitID = ''
+                this.obj = ''
+                this.objID = ''
+                this.itemsData = []
+            },
+            selectWorks() {
+                this.type = 'works'
+                this.comments = ''
+                this.hours = ''
+                this.dates = ''
+                this.normalDate = ''
+                this.techID = ''
+                this.contragent = ''
+                this.contragentID = ''
+                this.company = ''
+                this.time = ''
+                this.unitID = ''
+                this.obj = ''
+                this.objID = ''
+                this.itemsData = []
+            }
+        },
+        watch: {
+            objID: async function (val) {
+                try {
+                    this.typeWorks = [];
+                    this.unitID = '';
+                    this.hoursPlan = '';
+                    this.planID = {};
+
+                    const typeWorks = [];
+                    const obj = this.objs.filter((e) => e.ID === val)[0];
+                    const typeWorksStr = Object.values(obj.PROPERTY_1353)[0];
+                    const typeWorksData = typeWorksStr.split(';')
+
+                    for (const typeWork of typeWorksData) {
+                        console.log({typeWork})
+                        if (!!typeWork.trim()) {
+                            typeWorks.push(typeWork.trim());
+                        }
+                    }
+                    this.typeWorks = typeWorks
+                    if (!!this.objID && !!this.unitID) {
+                        await this.getPlan();
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
+            },
+            techID: async function (val) {
+                if (!!this.objID && !!this.typeWork) {
+                    await this.getPlan();
+                }
+            },
+            typeWork: async function (val) {
+                if (!!this.objID && !!this.techID) {
+                    await this.getPlan();
+                }
+            }
+        },
+        mounted() {
+            this.getUsers()
+            this.getCompany()
+            this.getObj()
+            this.getTechnics()
+            this.getMaterials()
+        }
+    });
+</script>
+</body>
+</html>
